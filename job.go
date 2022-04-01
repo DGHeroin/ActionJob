@@ -27,12 +27,7 @@ func (w *worker) start() {
         w.workerPool <- w.ch
         select {
         case job := <-w.ch: // 拿到job
-            go func(job Job) {
-                defer func() {
-                    recover()
-                }()
-                job()
-            }(job)
+            w.exec(job)
         case <-w.quit:
             return
         }
@@ -40,5 +35,11 @@ func (w *worker) start() {
 }
 
 func (w *worker) stop() {
-    close(w.quit)
+    w.quit <- true
+}
+func (w*worker) exec(job Job) {
+    defer func() {
+        recover()
+    }()
+    job()
 }
